@@ -260,6 +260,38 @@
 
   .divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
 
+  /* ── Unit converter ── */
+  .unit-tabs {
+    display: flex; gap: 6px; margin-bottom: 1.25rem; flex-wrap: wrap;
+  }
+  .unit-tab {
+    font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--border2); background: none; color: var(--text2);
+    font-family: var(--mono); transition: background 0.12s, color 0.12s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .unit-tab:active { transform: scale(0.94); }
+  .unit-tab.active { background: var(--accent-bg); color: var(--accent-text); border-color: var(--accent); }
+  @media (hover: hover) { .unit-tab:hover { background: var(--surface2); } }
+
+  .unit-row {
+    display: flex; gap: 8px; align-items: stretch;
+  }
+  .unit-field {
+    flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  }
+  .unit-field input, .unit-field select {
+    width: 100%;
+  }
+
+  .unit-formula {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--sm-radius); padding: 0.6rem 0.85rem;
+    font-size: 12px; color: var(--text2); font-family: var(--mono);
+    line-height: 1.6; word-break: break-word;
+  }
+  .unit-formula.hidden { display: none; }
+
   /* Inflation year picker */
   .year-row { display: flex; gap: 8px; align-items: center; }
   .year-row input { flex: 1; }
@@ -425,6 +457,110 @@
   </div>
 </div>
 
+<!-- ══ UNIT CONVERTER ══ -->
+<div id="tool-units" class="view">
+  <div class="tool-screen">
+    <div class="tool-header">
+      <button class="btn-back" onclick="goHome()" aria-label="Back">‹</button>
+      <div class="tool-header-title">Unit Converter</div>
+    </div>
+    <div class="tool-body">
+
+      <!-- Category tabs -->
+      <div class="unit-tabs" id="unit-tabs"></div>
+
+      <!-- Conversion row -->
+      <div class="unit-row">
+        <div class="unit-field">
+          <label class="field-label" id="unit-from-label">From</label>
+          <input type="number" id="unit-from-val" inputmode="decimal" placeholder="0" oninput="convertFrom()">
+          <select id="unit-from-sel" onchange="convertFrom(); updateFormula();"></select>
+        </div>
+        <div style="display:flex;align-items:center;padding-top:1.35rem;flex-shrink:0;">
+          <button class="swap-btn" onclick="swapUnits()" title="Swap units">⇅</button>
+        </div>
+        <div class="unit-field">
+          <label class="field-label" id="unit-to-label">To</label>
+          <input type="number" id="unit-to-val" inputmode="decimal" placeholder="0" oninput="convertTo()">
+          <select id="unit-to-sel" onchange="convertFrom(); updateFormula();"></select>
+        </div>
+      </div>
+
+      <!-- Formula display -->
+      <div id="unit-formula-wrap" style="margin-top:0.85rem;">
+        <div id="unit-formula" class="unit-formula"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ DATE MATH ══ -->
+<div id="tool-dates" class="view">
+  <div class="tool-screen">
+    <div class="tool-header">
+      <button class="btn-back" onclick="goHome()" aria-label="Back">‹</button>
+      <div class="tool-header-title">Date Math</div>
+    </div>
+    <div class="tool-body">
+
+      <!-- Mode tabs -->
+      <div class="unit-tabs" style="margin-bottom:1rem;">
+        <button class="unit-tab active" id="dtab-diff" onclick="setDateMode('diff')">📅 Days Between</button>
+        <button class="unit-tab" id="dtab-offset" onclick="setDateMode('offset')">➕ Date Offset</button>
+      </div>
+
+      <!-- Days Between -->
+      <div id="date-diff-panel">
+        <div class="field">
+          <label class="field-label">Start date</label>
+          <input type="date" id="date-diff-a" onchange="calcDateDiff()">
+        </div>
+        <div class="field">
+          <label class="field-label">End date</label>
+          <input type="date" id="date-diff-b" onchange="calcDateDiff()">
+        </div>
+        <div class="result-card" id="date-diff-result">
+          <div class="result-label">Difference</div>
+          <div class="result-value" id="date-diff-days"></div>
+          <div class="result-breakdown">
+            <div class="breakdown-row"><span class="breakdown-key">Weeks</span><span class="breakdown-val" id="date-diff-weeks"></span></div>
+            <div class="breakdown-row"><span class="breakdown-key">Start day</span><span class="breakdown-val" id="date-diff-aday"></span></div>
+            <div class="breakdown-row"><span class="breakdown-key">End day</span><span class="breakdown-val" id="date-diff-bday"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Date Offset -->
+      <div id="date-offset-panel" style="display:none;">
+        <div class="field">
+          <label class="field-label">Starting date</label>
+          <input type="date" id="date-offset-from" onchange="calcDateOffset()">
+        </div>
+        <div class="field">
+          <label class="field-label">Days offset</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="number" id="date-offset-days" inputmode="numeric" placeholder="0" style="flex:1" oninput="calcDateOffset()">
+            <div class="toggle-group" style="flex-shrink:0;">
+              <button class="tog active" id="tog-fwd" onclick="setOffsetDir(1)">+</button>
+              <button class="tog" id="tog-bwd" onclick="setOffsetDir(-1)">−</button>
+            </div>
+          </div>
+        </div>
+        <div class="result-card" id="date-offset-result">
+          <div class="result-label">Result</div>
+          <div class="result-value" id="date-offset-date"></div>
+          <div class="result-breakdown">
+            <div class="breakdown-row"><span class="breakdown-key">Day of week</span><span class="breakdown-val" id="date-offset-dow"></span></div>
+            <div class="breakdown-row"><span class="breakdown-key">Days from today</span><span class="breakdown-val" id="date-offset-fromtoday"></span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
 /* ── CPI dataset (annual avg, 1913–2026)
    2025: BLS annual avg ~321.5 (Oct/Nov missing; estimated from available months + 2.7% Dec/Dec rate)
@@ -435,8 +571,10 @@ const CPI_ESTIMATE_FROM = 2025;
 
 /* ── Tools registry ── */
 const TOOLS = [
-  { id:'gas',       icon:'⛽', name:'Trip Cost',  desc:'Fuel Cost Estimator' },
-  { id:'inflation', icon:'📈', name:'Inflation',  desc:'CPI Calculator' },
+  { id:'gas',       icon:'⛽', name:'Trip Cost',   desc:'Fuel Cost Estimator' },
+  { id:'inflation', icon:'📈', name:'Inflation',   desc:'CPI Calculator' },
+  { id:'units',     icon:'⇄',  name:'Units',       desc:'Unit Converter' },
+  { id:'dates',     icon:'📅', name:'Date Math',   desc:'Date Calculator' },
 ];
 
 /* ── Storage helpers ── */
@@ -482,8 +620,10 @@ function openTool(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('tool-' + id).classList.add('active');
   window.scrollTo(0,0);
-  if (id === 'gas') showGasHints();
+  if (id === 'gas')       showGasHints();
   if (id === 'inflation') showInflationHints();
+  if (id === 'units')     initUnits();
+  if (id === 'dates')     initDates();
 }
 
 function goHome() {
@@ -601,6 +741,275 @@ function swapYears() {
   const b = document.getElementById('inf-to').value;
   document.getElementById('inf-from').value = b;
   document.getElementById('inf-to').value   = a;
+}
+
+/* ════════════════════════════════════════
+   UNIT CONVERTER
+   ════════════════════════════════════════ */
+
+/* Each unit: { label, toBase, fromBase, formula }
+   toBase / fromBase are functions converting to/from a canonical base unit.
+   formula: string shown in UI, or null to suppress. */
+
+const UNIT_CATS = [
+  {
+    id: 'distance', name: '📏 Distance',
+    units: [
+      { label:'in',  toBase: v=>v*0.0254,    fromBase: v=>v/0.0254    },
+      { label:'ft',  toBase: v=>v*0.3048,    fromBase: v=>v/0.3048    },
+      { label:'yd',  toBase: v=>v*0.9144,    fromBase: v=>v/0.9144    },
+      { label:'mi',  toBase: v=>v*1609.344,  fromBase: v=>v/1609.344  },
+      { label:'mm',  toBase: v=>v*0.001,     fromBase: v=>v/0.001     },
+      { label:'cm',  toBase: v=>v*0.01,      fromBase: v=>v/0.01      },
+      { label:'m',   toBase: v=>v,           fromBase: v=>v           },
+      { label:'km',  toBase: v=>v*1000,      fromBase: v=>v/1000      },
+    ]
+  },
+  {
+    id: 'mass', name: '⚖️ Mass',
+    units: [
+      { label:'oz',  toBase: v=>v*0.0283495, fromBase: v=>v/0.0283495 },
+      { label:'lb',  toBase: v=>v*0.453592,  fromBase: v=>v/0.453592  },
+      { label:'g',   toBase: v=>v*0.001,     fromBase: v=>v/0.001     },
+      { label:'kg',  toBase: v=>v,           fromBase: v=>v           },
+      { label:'t',   toBase: v=>v*1000,      fromBase: v=>v/1000      },
+    ]
+  },
+  {
+    id: 'speed', name: '💨 Speed',
+    units: [
+      { label:'mph',  toBase: v=>v*0.44704,  fromBase: v=>v/0.44704   },
+      { label:'km/h', toBase: v=>v/3.6,      fromBase: v=>v*3.6       },
+      { label:'m/s',  toBase: v=>v,          fromBase: v=>v           },
+      { label:'kn',   toBase: v=>v*0.514444, fromBase: v=>v/0.514444  },
+      { label:'ft/s', toBase: v=>v*0.3048,   fromBase: v=>v/0.3048    },
+    ]
+  },
+  {
+    id: 'time', name: '⏱ Time',
+    units: [
+      { label:'sec',  toBase: v=>v,          fromBase: v=>v           },
+      { label:'min',  toBase: v=>v*60,       fromBase: v=>v/60        },
+      { label:'hr',   toBase: v=>v*3600,     fromBase: v=>v/3600      },
+      { label:'day',  toBase: v=>v*86400,    fromBase: v=>v/86400     },
+      { label:'wk',   toBase: v=>v*604800,   fromBase: v=>v/604800    },
+    ]
+  },
+  {
+    id: 'temp', name: '🌡 Temp',
+    units: [
+      { label:'°F', toBase: v=>(v-32)*5/9,   fromBase: v=>v*9/5+32   },
+      { label:'°C', toBase: v=>v,            fromBase: v=>v           },
+      { label:'K',  toBase: v=>v-273.15,     fromBase: v=>v+273.15   },
+    ]
+  },
+];
+
+let activeCat = 0;
+
+function initUnits() {
+  // Build category tabs
+  const tabsEl = document.getElementById('unit-tabs');
+  tabsEl.innerHTML = UNIT_CATS.map((c,i) =>
+    `<button class="unit-tab${i===0?' active':''}" onclick="setUnitCat(${i})">${c.name}</button>`
+  ).join('');
+  populateUnitSelects();
+}
+
+function setUnitCat(i) {
+  activeCat = i;
+  document.querySelectorAll('.unit-tab').forEach((t,j) => t.classList.toggle('active', j===i));
+  populateUnitSelects();
+  document.getElementById('unit-from-val').value = '';
+  document.getElementById('unit-to-val').value = '';
+  updateFormula();
+}
+
+function populateUnitSelects() {
+  const cat = UNIT_CATS[activeCat];
+  const fromSel = document.getElementById('unit-from-sel');
+  const toSel   = document.getElementById('unit-to-sel');
+  const opts = cat.units.map((u,i) => `<option value="${i}">${u.label}</option>`).join('');
+  fromSel.innerHTML = opts;
+  toSel.innerHTML   = opts;
+  // Default to second unit for "to" so they're different
+  toSel.selectedIndex = Math.min(1, cat.units.length - 1);
+  updateFormula();
+}
+
+function getFormula() {
+  const cat = UNIT_CATS[activeCat];
+  const fi  = document.getElementById('unit-from-sel').selectedIndex;
+  const ti  = document.getElementById('unit-to-sel').selectedIndex;
+  if (fi === ti) return null;
+  const f = cat.units[fi].label;
+  const t = cat.units[ti].label;
+
+  // Temperature — non-linear, enumerate all pairs explicitly
+  if (cat.id === 'temp') {
+    if (f === '°F' && t === '°C') return '°C = (°F − 32) × 5⁄9';
+    if (f === '°C' && t === '°F') return '°F = °C × 9⁄5 + 32';
+    if (f === '°F' && t === 'K')  return 'K = (°F − 32) × 5⁄9 + 273.15';
+    if (f === 'K'  && t === '°F') return '°F = (K − 273.15) × 9⁄5 + 32';
+    if (f === '°C' && t === 'K')  return 'K = °C + 273.15';
+    if (f === 'K'  && t === '°C') return '°C = K − 273.15';
+    return null;
+  }
+
+  // Linear — compute direct multiplier from base conversions
+  const fromU = cat.units[fi];
+  const toU   = cat.units[ti];
+  // factor = how many "to" units equal one "from" unit
+  const factor = toU.fromBase(fromU.toBase(1));
+  if (!isFinite(factor) || factor === 0) return null;
+
+  // Format the factor cleanly
+  let fStr;
+  if (Math.abs(factor) >= 1000 || (Math.abs(factor) < 0.01 && factor !== 0)) {
+    fStr = factor.toExponential(4).replace(/\.?0+e/, 'e');
+  } else {
+    fStr = parseFloat(factor.toPrecision(6)).toString();
+  }
+
+  return `${f} × ${fStr} = ${t}`;
+}
+
+function updateFormula() {
+  const f = getFormula();
+  const el = document.getElementById('unit-formula');
+  const wrap = document.getElementById('unit-formula-wrap');
+  if (f) { el.textContent = f; el.classList.remove('hidden'); wrap.style.display = ''; }
+  else   { el.classList.add('hidden'); wrap.style.display = 'none'; }
+}
+
+function convertFrom() {
+  const cat = UNIT_CATS[activeCat];
+  const val = parseFloat(document.getElementById('unit-from-val').value);
+  const fi  = document.getElementById('unit-from-sel').selectedIndex;
+  const ti  = document.getElementById('unit-to-sel').selectedIndex;
+  updateFormula();
+  if (isNaN(val)) { document.getElementById('unit-to-val').value = ''; return; }
+  const base   = cat.units[fi].toBase(val);
+  const result = cat.units[ti].fromBase(base);
+  document.getElementById('unit-to-val').value = formatUnitResult(result);
+}
+
+function convertTo() {
+  const cat = UNIT_CATS[activeCat];
+  const val = parseFloat(document.getElementById('unit-to-val').value);
+  const fi  = document.getElementById('unit-from-sel').selectedIndex;
+  const ti  = document.getElementById('unit-to-sel').selectedIndex;
+  updateFormula();
+  if (isNaN(val)) { document.getElementById('unit-from-val').value = ''; return; }
+  const base   = cat.units[ti].toBase(val);
+  const result = cat.units[fi].fromBase(base);
+  document.getElementById('unit-from-val').value = formatUnitResult(result);
+}
+
+function formatUnitResult(v) {
+  if (Math.abs(v) >= 1e6 || (Math.abs(v) < 0.0001 && v !== 0)) return v.toExponential(4);
+  if (Math.abs(v) >= 100)  return parseFloat(v.toFixed(4)).toString();
+  return parseFloat(v.toFixed(6)).toString();
+}
+
+function swapUnits() {
+  const fromSel = document.getElementById('unit-from-sel');
+  const toSel   = document.getElementById('unit-to-sel');
+  const fromVal = document.getElementById('unit-from-val');
+  const toVal   = document.getElementById('unit-to-val');
+  const tmpIdx = fromSel.selectedIndex;
+  fromSel.selectedIndex = toSel.selectedIndex;
+  toSel.selectedIndex   = tmpIdx;
+  const tmpVal = fromVal.value;
+  fromVal.value = toVal.value;
+  toVal.value   = tmpVal;
+  updateFormula();
+  if (fromVal.value) convertFrom();
+}
+
+/* ════════════════════════════════════════
+   DATE MATH
+   ════════════════════════════════════════ */
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let dateMode = 'diff';
+let offsetDir = 1;
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+
+function initDates() {
+  const t = todayStr();
+  document.getElementById('date-diff-a').value = t;
+  document.getElementById('date-diff-b').value = t;
+  document.getElementById('date-offset-from').value = t;
+  calcDateDiff();
+}
+
+function setDateMode(m) {
+  dateMode = m;
+  document.getElementById('dtab-diff').classList.toggle('active',   m === 'diff');
+  document.getElementById('dtab-offset').classList.toggle('active', m === 'offset');
+  document.getElementById('date-diff-panel').style.display   = m === 'diff'   ? '' : 'none';
+  document.getElementById('date-offset-panel').style.display = m === 'offset' ? '' : 'none';
+}
+
+function parseLocalDate(str) {
+  // Parse YYYY-MM-DD as local time (avoid UTC offset shifting the date)
+  const [y,mo,d] = str.split('-').map(Number);
+  return new Date(y, mo-1, d);
+}
+
+function formatDate(d) {
+  return DAYS[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate() + ' ' + d.getFullYear();
+}
+
+function dayStr(n) { return Math.abs(n) === 1 ? 'day' : 'days'; }
+
+function calcDateDiff() {
+  const aStr = document.getElementById('date-diff-a').value;
+  const bStr = document.getElementById('date-diff-b').value;
+  if (!aStr || !bStr) return;
+  const a = parseLocalDate(aStr);
+  const b = parseLocalDate(bStr);
+  const diffMs   = b - a;
+  const diffDays = Math.round(diffMs / 86400000);
+  const absDays  = Math.abs(diffDays);
+  document.getElementById('date-diff-days').textContent  = (diffDays >= 0 ? '+' : '−') + absDays + ' ' + dayStr(absDays);
+  document.getElementById('date-diff-weeks').textContent = (absDays / 7).toFixed(2) + ' wks';
+  document.getElementById('date-diff-aday').textContent  = DAYS[a.getDay()];
+  document.getElementById('date-diff-bday').textContent  = DAYS[b.getDay()];
+  document.getElementById('date-diff-result').classList.add('show');
+}
+
+function setOffsetDir(d) {
+  offsetDir = d;
+  document.getElementById('tog-fwd').classList.toggle('active', d ===  1);
+  document.getElementById('tog-bwd').classList.toggle('active', d === -1);
+  calcDateOffset();
+}
+
+function calcDateOffset() {
+  const fromStr = document.getElementById('date-offset-from').value;
+  const daysRaw = parseInt(document.getElementById('date-offset-days').value);
+  if (!fromStr || isNaN(daysRaw)) { document.getElementById('date-offset-result').classList.remove('show'); return; }
+  const days   = daysRaw * offsetDir;
+  const from   = parseLocalDate(fromStr);
+  const result = new Date(from);
+  result.setDate(result.getDate() + days);
+  const today     = parseLocalDate(todayStr());
+  const fromToday = Math.round((result - today) / 86400000);
+  const absft     = Math.abs(fromToday);
+  const ftLabel   = fromToday === 0 ? 'today'
+                  : fromToday > 0  ? '+' + absft + ' ' + dayStr(absft) + ' from today'
+                  :                  absft + ' ' + dayStr(absft) + ' ago';
+  document.getElementById('date-offset-date').textContent      = formatDate(result);
+  document.getElementById('date-offset-dow').textContent       = DAYS[result.getDay()];
+  document.getElementById('date-offset-fromtoday').textContent = ftLabel;
+  document.getElementById('date-offset-result').classList.add('show');
 }
 
 init();
