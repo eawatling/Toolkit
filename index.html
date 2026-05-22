@@ -223,7 +223,14 @@
   input:focus, select:focus { border-color: var(--accent); }
   select { background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236b6860' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
 
-  .autofill-hint {
+  .round-trip-label {
+    display: flex; align-items: center; gap: 7px; margin-top: 8px;
+    font-size: 13px; color: var(--text2); font-family: var(--mono); cursor: pointer;
+    user-select: none;
+  }
+  .round-trip-label input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0;
+  }
     margin-top: 5px; font-size: 12px; color: var(--accent-text);
     font-family: var(--mono); cursor: pointer; display: none;
   }
@@ -337,6 +344,9 @@
         <label class="field-label">Distance (miles)</label>
         <input type="number" id="gas-miles" inputmode="decimal" placeholder="0" onchange="saveGasField('miles',this.value)">
         <div class="autofill-hint" id="hint-miles" onclick="autofill('gas-miles','miles')"></div>
+        <label class="round-trip-label">
+          <input type="checkbox" id="gas-roundtrip"> Round trip
+        </label>
       </div>
 
       <div class="field">
@@ -357,6 +367,7 @@
         <div class="result-label">Total fuel cost</div>
         <div class="result-value" id="gas-total"></div>
         <div class="result-breakdown">
+          <div class="breakdown-row"><span class="breakdown-key">Total distance</span><span class="breakdown-val" id="gas-miles-used"></span></div>
           <div class="breakdown-row"><span class="breakdown-key">Gallons needed</span><span class="breakdown-val" id="gas-gallons"></span></div>
           <div class="breakdown-row"><span class="breakdown-key">Cost per mile</span><span class="breakdown-val" id="gas-cpm"></span></div>
         </div>
@@ -397,6 +408,7 @@
         <button class="btn-calc" style="flex:1;margin-top:0" onclick="calcInflation()">Calculate</button>
         <button class="swap-btn" onclick="swapYears()" title="Swap years">⇅</button>
       </div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:0.75rem;">Data range: 1913 – 2026 &nbsp;·&nbsp; Source: BLS CPI-U</div>
 
       <div class="result-card" id="inf-result">
         <div class="result-label">Equivalent value</div>
@@ -546,16 +558,19 @@ function saveInfField(field, val) { if (val !== '') save('tk-inf-' + field, val)
 
 /* ── Gas calc ── */
 function calcGas() {
-  const miles = parseFloat(document.getElementById('gas-miles').value);
-  const mpg   = parseFloat(document.getElementById('gas-mpg').value);
-  const price = parseFloat(document.getElementById('gas-price').value);
-  if (!miles || !mpg || !price || mpg <= 0) { alert('Please fill in all fields.'); return; }
+  const milesOne = parseFloat(document.getElementById('gas-miles').value);
+  const mpg      = parseFloat(document.getElementById('gas-mpg').value);
+  const price    = parseFloat(document.getElementById('gas-price').value);
+  const roundTrip = document.getElementById('gas-roundtrip').checked;
+  if (!milesOne || !mpg || !price || mpg <= 0) { alert('Please fill in all fields.'); return; }
+  const miles   = roundTrip ? milesOne * 2 : milesOne;
   const gallons = miles / mpg;
   const total   = gallons * price;
   const cpm     = total / miles;
   document.getElementById('gas-total').textContent   = '$' + total.toFixed(2);
   document.getElementById('gas-gallons').textContent = gallons.toFixed(2) + ' gal';
   document.getElementById('gas-cpm').textContent     = '$' + cpm.toFixed(3) + '/mi';
+  document.getElementById('gas-miles-used').textContent = miles.toFixed(0) + ' mi';
   document.getElementById('gas-result').classList.add('show');
 }
 
